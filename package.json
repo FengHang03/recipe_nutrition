@@ -1,0 +1,29 @@
+{
+  "name": "ai-pet-fresh-diet",
+  "version": "1.0.0",
+  "description": "AI-powered pet nutrition optimization system",
+  "private": true,
+  "workspaces": [
+    "pet-nutrition-frontend"
+  ],
+  "scripts": {
+    "dev:frontend": "cd pet-nutrition-frontend && npm run dev",
+    "build:frontend": "cd pet-nutrition-frontend && npm run build",
+    "dev:backend": "cd backend && python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000",
+    "install:frontend": "cd pet-nutrition-frontend && npm install",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "setup": "npm run install:backend && npm run install:frontend"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.1",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.0",
+    "postcss": "^8.5.5",
+    "tailwindcss": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "python": ">=3.10.0"
+  }
+}

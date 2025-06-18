@@ -1,0 +1,106 @@
+
+<!-- index.html -->
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="基于AAFCO营养标准的专业宠物鲜食配方生成系统，为您的爱宠量身定制营养均衡的科学配方。" />
+    <meta name="keywords" content="宠物营养,鲜食配方,AAFCO标准,宠物健康,营养分析" />
+    <meta name="author" content="Tuanty Nutrition" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://petnutrition.pro/" />
+    <meta property="og:title" content="Tuanty Nutrition - 专业宠物鲜食配方生成系统" />
+    <meta property="og:description" content="基于AAFCO营养标准，运用线性规划算法，为您的爱宠量身定制营养均衡的鲜食配方。" />
+    <meta property="og:image" content="/og-image.png" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://petnutrition.pro/" />
+    <meta property="twitter:title" content="Tuanty Nutritiono - 专业宠物鲜食配方生成系统" />
+    <meta property="twitter:description" content="基于AAFCO营养标准，运用线性规划算法，为您的爱宠量身定制营养均衡的鲜食配方。" />
+    <meta property="twitter:image" content="/og-image.png" />
+    
+    <!-- Preload important fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <title>Tuanty Nutrition - Professional Pet Fresh Food Recipe Generator</title>
+    
+    <!-- 预加载关键资源 -->
+    <link rel="modulepreload" href="/src/main.tsx" />
+    
+    <style>
+      /* 首屏加载优化 */
+      body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        line-height: 1.6;
+        color: #374151;
+        background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%);
+      }
+      
+      /* 防止FOUC */
+      .loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #f8fafc 0%, #f0fdf4 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+      
+      .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e5e7eb;
+        border-top: 4px solid #22c55e;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- 初始加载屏幕 -->
+      <div class="loading-screen">
+        <div>
+          <div class="loading-spinner"></div>
+          <p style="margin-top: 1rem; text-align: center; color: #6b7280;">
+            正在加载 Tuanty Nutrition...
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- 移除加载屏幕 -->
+    <script>
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loadingScreen = document.querySelector('.loading-screen');
+          if (loadingScreen) {
+            loadingScreen.style.opacity = '0';
+            loadingScreen.style.transition = 'opacity 0.5s ease-out';
+            setTimeout(function() {
+              loadingScreen.remove();
+            }, 500);
+          }
+        }, 1000);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+# 核心框架
+fastapi>=0.104.1
+uvicorn>=0.24.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# 数据库
+sqlalchemy>=2.0.23
+psycopg2-binary>=2.9.9
+asyncpg>=0.29.0
+
+# 数据处理
+pandas>=2.1.4
+numpy>=1.24.0
+
+# HTTP客户端
+httpx>=0.25.2
+requests>=2.31.0
+
+# 优化计算
+scipy>=1.11.4
+pulp>=2.7.0
+
+# 环境配置
+python-dotenv>=1.0.0
+
+# UUID支持
+uuid
+
+# 日期时间处理
+python-dateutil>=2.8.2
+
+# 类型提示支持
+typing-extensions>=4.8.0
+
+# 开发工具
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+
+# 日志记录增强
+colorlog>=6.7.0
+
+# 数据验证增强
+email-validator>=2.1.0
