@@ -10,8 +10,39 @@ import type{
 
 import { LifeStage, ActivityLevel, PhysiologicalStatus } from '../types/index';
 
-// Configure base URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// Configure base URL - dynamically use current host
+const getApiBaseUrl = () => {
+  // 在开发环境中，如果有环境变量则使用环境变量
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
+  
+  const currentHost = window.location.hostname;
+  
+  // 检查是否是ngrok域名访问
+  if (currentHost.includes('ngrok-free.app')) {
+    // 如果是通过ngrok的前端域名访问，使用ngrok的后端域名
+    return 'https://a92e-113-87-81-162.ngrok-free.app';
+  }
+  
+  // 本地开发环境或局域网访问
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  
+  // 局域网IP访问
+  return `http://${currentHost}:8000`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
+
+// 调试信息
+console.log('🔧 API Configuration:', {
+  currentHost: window.location.hostname,
+  currentOrigin: window.location.origin,
+  apiBaseUrl: API_BASE_URL,
+  envApiUrl: import.meta.env.VITE_API_BASE_URL
+});
 
 // Create axios instance
 const apiClient = axios.create({

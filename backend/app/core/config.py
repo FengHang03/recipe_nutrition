@@ -68,6 +68,12 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URI_ASYNC(self) -> str:
         """获取异步数据库URL"""
+        # 优先使用环境变量中的DATABASE_URL
+        database_url = os.getenv("DATABASE_URL")
+        if database_url:
+            return database_url
+        
+        # 否则使用单独的配置项构建
         return f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
 
     # LLM设置

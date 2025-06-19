@@ -12,10 +12,12 @@ export default defineConfig({
   },
   server: {
     port: 3000,
-    host: '0.0.0.0',
+    host: true, // 接受所有主机连接
+    allowedHosts: ['172.18.11.73', 'd130-113-87-81-162.ngrok-free.app', 'a92e-113-87-81-162.ngrok-free.app'],
+    strictPort: false,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: 'http://172.18.11.73:8000',  // 更新为当前的IP地址
         changeOrigin: true,
         secure: false,
       },

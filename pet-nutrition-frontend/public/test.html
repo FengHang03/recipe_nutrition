@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Connection Test</title>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    <button onclick="testAPI()">Test API Connection</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                // 获取当前主机
+                const currentHost = window.location.hostname;
+                const apiUrl = `http://${currentHost}:8000/api/v1/health/`;
+                
+                console.log('Testing API URL:', apiUrl);
+                
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `
+                    <h3>✅ Success!</h3>
+                    <p><strong>API URL:</strong> ${apiUrl}</p>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Response:</strong> ${JSON.stringify(data, null, 2)}</p>
+                `;
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Error!</h3>
+                    <p><strong>API URL:</strong> http://${window.location.hostname}:8000/api/v1/health/</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p><strong>Current Host:</strong> ${window.location.hostname}</p>
+                    <p><strong>Current Origin:</strong> ${window.location.origin}</p>
+                `;
+                console.error('API Test Error:', error);
+            }
+        }
+    </script>
+</body>
+</html> 

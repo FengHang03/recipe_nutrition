@@ -1,194 +1,197 @@
 import { create } from 'zustand';
-import { devtools } from 'zustand/middleware';
-import { petAPI, recipeAPI } from '../services/api';
-import type { 
+import { subscribeWithSelector, devtools } from 'zustand/middleware';
+import { 
   Pet, 
   PetFormData, 
-  RecipeGenerationRequest, 
-  RecipeResult,
-  LoadingState,
-  ErrorState,
-  CurrentStep
+  RecipeResult, 
+  RecipeGenerationRequest,
+  CreatePetResponse 
 } from '../types';
+import { petAPI, recipeAPI } from '../services/api';
 
-// State
 interface PetStore {
-  // State
-  pet: Pet | null;
-  recipe: RecipeResult | null;
-  isLoading: LoadingState;
-  isGenerating: LoadingState;
-  error: ErrorState;
-  currentStep: CurrentStep;
+  // 状态
+  currentPet: Pet | null;
+  petCreationResult: CreatePetResponse | null;
+  currentRecipe: RecipeResult | null;
+  isLoading: boolean;
+  isGenerating: boolean;
+  error: string | null;
+  currentStep: number;
 
-  // Pet-related operations
-  createPet: (data: PetFormData) => Promise<void>;
-  updatePet: (id: number, data: Partial<PetFormData>) => Promise<void>;
+  // Pet相关操作
+  createPet: (petData: PetFormData) => Promise<void>;
+  setPet: (pet: Pet) => void;
   clearPet: () => void;
 
-  // Recipe-related operations
+  // Recipe相关操作
   generateRecipe: (request: RecipeGenerationRequest) => Promise<void>;
+  setRecipe: (recipe: RecipeResult) => void;
   clearRecipe: () => void;
 
-  // UI state operations
-  setCurrentStep: (step: CurrentStep) => void;
-  setLoading: (loading: LoadingState) => void;
-  setGenerating: (generating: LoadingState) => void;
-  setError: (error: ErrorState) => void;
+  // UI状态操作
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  setCurrentStep: (step: number) => void;
+  nextStep: () => void;
+  prevStep: () => void;
   reset: () => void;
 }
 
-const initialState = {
-  pet: null,
-  recipe: null,
-  isLoading: false,
-  isGenerating: false,
-  error: null,
-  currentStep: 0 as CurrentStep,
-};
-
 export const usePetStore = create<PetStore>()(
-  devtools(
-    (set, get) => ({
-      ...initialState,
+  subscribeWithSelector(
+    devtools(
+      (set, get) => ({
+        // 初始状态
+        currentPet: null,
+        petCreationResult: null,
+        currentRecipe: null,
+        isLoading: false,
+        isGenerating: false,
+        error: null,
+        currentStep: 0,
 
-      // Pet-related operations
-      createPet: async (data: PetFormData) => {
-        console.log('🐕 Creating pet with data:', data);
-        
-        set((state) => ({ 
-          ...state, 
-          isLoading: true, 
-          error: null 
-        }), false, 'createPet/start');
+        // Pet相关操作
+        createPet: async (petData: PetFormData) => {
+          console.log('🔄 Creating pet with data:', petData);
 
-        try {
-          const response = await petAPI.createPet(data);
-          console.log('✅ Pet created successfully:', response);
+          const { isLoading } = get();
+          if (isLoading) {
+            console.log('🏪 Store: Already loading, skipping');
+            return;
+          }
+          console.log('🏪 Store: Setting loading state');
+          set({ isLoading: true, error: null });
           
-          // Convert response to Pet object
-          const pet: Pet = {
-            ...data,
-            id: response.data.pet_id,
-            daily_calories_kcal: response.data.daily_calories_kcal
-          };
-          
-          set((state) => ({ 
-            ...state, 
-            pet, 
-            isLoading: false,
-            currentStep: 1,
+          try {
+            console.log('🏪 Store: Calling petAPI.createPet...');
+            const result = await petAPI.createPet(petData);
+            console.log('🏪 Store: Pet API result:', result);
+            
+            const pet: Pet = {
+              ...petData,
+              id: result.data.pet_id,
+              daily_calories_kcal: result.data.daily_calories_kcal
+            };
+
+            console.log('🏪 Store: Setting pet in state:', pet);
+            set({ 
+              currentPet: pet,
+              petCreationResult: result,
+              isLoading: false 
+            });
+            console.log('✅ Store: Pet created successfully');
+          } catch (error) {
+            console.error('❌ Store: Create pet failed:', error);
+            const errorMessage = error instanceof Error ? error.message : '创建宠物失败';
+            set({ 
+              error: errorMessage, 
+              isLoading: false 
+            });
+            throw error;
+          }
+        },
+
+        setPet: (pet: Pet) => {
+          set({ currentPet: pet, error: null });
+        },
+
+        clearPet: () => {
+          set({ 
+            currentPet: null, 
+            petCreationResult: null,
             error: null 
-          }), false, 'createPet/success');
+          });
+        },
 
-        } catch (error) {
-          console.error('❌ Failed to create pet:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Failed to create pet';
+        // Recipe相关操作
+        generateRecipe: async (request: RecipeGenerationRequest) => {
+          const { isGenerating } = get();
+          if (isGenerating) return;
+
+          set({ isGenerating: true, error: null });
           
-          set((state) => ({ 
-            ...state, 
-            isLoading: false, 
-            error: errorMessage 
-          }), false, 'createPet/error');
-          
-          throw error;
-        }
-      },
+          try {
+            const recipe = await recipeAPI.generateRecipe(request);
+            
+            // 🔧 修复：一次性设置所有相关状态
+            set({ 
+              currentRecipe: recipe,
+              isGenerating: false,
+              error: recipe.status !== 'Success' ? (recipe.error || '配方生成失败') : null
+            });
+          } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : '配方生成失败';
+            set({ 
+              error: errorMessage, 
+              isGenerating: false 
+            });
+            throw error;
+          }
+        },
 
-      updatePet: async (id: number, data: Partial<PetFormData>) => {
-        try {
-          const pet = await petAPI.updatePet(id, data);
-          set({ pet });
-        } catch (error) {
-          console.error('Failed to update pet:', error);
-          throw error;
-        }
-      },
+        setRecipe: (recipe: RecipeResult) => {
+          set({ currentRecipe: recipe, error: null });
+        },
 
-      clearPet: () => {
-        set({ pet: null });
-      },
+        clearRecipe: () => {
+          set({ 
+            currentRecipe: null, 
+            error: null 
+          });
+        },
 
-      // Recipe-related operations
-      generateRecipe: async (request: RecipeGenerationRequest) => {
-        console.log('🍽️ Generating recipe with request:', request);
-        
-        set((state) => ({ 
-          ...state, 
-          isGenerating: true, 
-          error: null 
-        }), false, 'generateRecipe/start');
+        // UI状态操作
+        setLoading: (loading: boolean) => {
+          set({ isLoading: loading });
+        },
 
-        try {
-          const recipe = await recipeAPI.generateRecipe(request);
-          console.log('✅ Recipe generated successfully:', recipe);
-          
-          // 🔧 Fix: Set all related states at once
-          set((state) => ({ 
-            ...state, 
-            recipe, 
+        setError: (error: string | null) => {
+          set({ error });
+        },
+
+        setCurrentStep: (step: number) => {
+          set({ currentStep: step });
+        },
+
+        nextStep: () => {
+          const { currentStep } = get();
+          set({ currentStep: currentStep + 1 });
+        },
+
+        prevStep: () => {
+          const { currentStep } = get();
+          if (currentStep > 0) {
+            set({ currentStep: currentStep - 1 });
+          }
+        },
+
+        reset: () => {
+          set({
+            currentPet: null,
+            petCreationResult: null,
+            currentRecipe: null,
+            isLoading: false,
             isGenerating: false,
-            error: recipe.status !== 'Success' ? (recipe.error || 'Recipe generation failed') : null
-          }), false, 'generateRecipe/success');
-
-        } catch (error) {
-          console.error('❌ Failed to generate recipe:', error);
-          const errorMessage = error instanceof Error ? error.message : 'Recipe generation failed';
-          
-          set((state) => ({ 
-            ...state, 
-            isGenerating: false, 
-            error: errorMessage 
-          }), false, 'generateRecipe/error');
-          
-          throw error;
+            error: null,
+            currentStep: 0
+          });
         }
-      },
-
-      clearRecipe: () => {
-        set({ recipe: null });
-      },
-
-      // UI state operations
-      setCurrentStep: (step: CurrentStep) => {
-        console.log(`📍 Setting current step to: ${step}`);
-        set({ currentStep: step });
-      },
-
-      setLoading: (loading: LoadingState) => {
-        set({ isLoading: loading });
-      },
-
-      setGenerating: (generating: LoadingState) => {
-        set({ isGenerating: generating });
-      },
-
-      setError: (error: ErrorState) => {
-        set({ error });
-      },
-
-      reset: () => {
-        console.log('🔄 Resetting store to initial state');
-        set(initialState, false, 'reset');
-      },
-    }),
-    {
-      name: 'pet-store',
-      enabled: process.env.NODE_ENV === 'development',
-    }
+      })
+    )
   )
 );
 
-// ✅ Simple selector functions (these are safe)
-export const usePet = () => usePetStore((state) => state.pet);
-export const useRecipe = () => usePetStore((state) => state.recipe);
+// ✅ 简单选择器函数（这些是安全的）
+export const usePet = () => usePetStore((state) => state.currentPet);
+export const useRecipe = () => usePetStore((state) => state.currentRecipe);
 export const useIsLoading = () => usePetStore((state) => state.isLoading);
 export const useIsGenerating = () => usePetStore((state) => state.isGenerating);
 export const useError = () => usePetStore((state) => state.error);
 export const useCurrentStep = () => usePetStore((state) => state.currentStep);
 
-// 🚨 Remove compound selectors! These are the root cause of infinite loops
-// Don't use these:
-// export const useHasPet = () => usePetStore((state) => !!state.pet);
-// export const useHasRecipe = () => usePetStore((state) => !!state.recipe);
-// export const useIsReady = () => usePetStore((state) => !state.isLoading && !state.isGenerating);
+// 🚨 删除复合选择器！这些是导致无限循环的根本原因
+// 不要使用这些：
+// export const usePetActions = () => { ... }
+// export const useRecipeActions = () => { ... }
+// export const useUIActions = () => { ... }

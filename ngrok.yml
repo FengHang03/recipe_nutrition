@@ -1,0 +1,16 @@
+# ngrok.yml
+version: "2"
+authtoken: 2yhz1VnuvW3Si6ncsNv5UEianBH_497VejZ1RUiH7reB5Jh97 
+
+tunnels:
+  backend_api:
+    proto: http
+    addr: 8000
+
+  frontend_ui:
+    proto: http
+    addr: 3000
+
+  postgres_db:
+    proto: tcp
+    addr: 5433
